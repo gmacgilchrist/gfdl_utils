@@ -2,7 +2,7 @@ import xarray as xr
 import glob
 import os
 
-def open_frompp(pp,ppname,out,local,time,add,get_static=True):
+def open_frompp(pp,ppname,out,local,time,add):
     """
     
     Open to a dataset from archive based on details of
@@ -27,9 +27,6 @@ def open_frompp(pp,ppname,out,local,time,add,get_static=True):
         If `out` is av, this could be 'ann' (for annual data)
             or a number corresponding to the month 
             (for monthly climatology)
-    get_static : bool
-        Retrieve the associated static grid data and 
-            put it in the dataset
     Returns
     -------
     ds : xarray.Dataset
@@ -37,10 +34,11 @@ def open_frompp(pp,ppname,out,local,time,add,get_static=True):
         
     """
     
-    _,paths = get_pathspp(pp,ppname,out,local,time,add,get_static=get_static)
+    path = get_pathspp(pp,ppname,out,local,time,add)
+    paths = glob.glob(path)
     return xr.open_mfdataset(paths,use_cftime=True)
 
-def get_pathspp(pp,ppname,out,local,time,add,get_static=True):
+def get_pathspp(pp,ppname,out,local,time,add):
     """
     
     Create a full path based on details of postprocess path
@@ -64,8 +62,6 @@ def get_pathspp(pp,ppname,out,local,time,add,get_static=True):
         If `out` is av, this could be 'ann' (for annual data)
             or a number corresponding to the month 
             (for monthly climatology)
-    get_static : bool
-        Append the associated static grid path
         
     Returns
     -------
@@ -77,11 +73,7 @@ def get_pathspp(pp,ppname,out,local,time,add,get_static=True):
     """
     filename = ".".join([ppname,time,add,'nc'])
     path = "/".join([pp,ppname,out,local,filename])
-    paths = glob.glob(path)
-    if get_static:
-        static = ".".join([ppname,'static','nc'])
-        paths.append("/".join([pp,ppname,static]))
-    return path,paths
+    return path
 
 def get_pathstatic(pp,ppname):
     """
@@ -105,6 +97,28 @@ def get_pathstatic(pp,ppname):
     static = ".".join([ppname,'static','nc'])
     path = "/".join([pp,ppname,static])
     return path
+
+def open_static(pp,ppname):
+    """
+    
+    Get the path to the static grid file associated with
+    particular postprocessed data.
+    
+    Parameters
+    ----------
+    pp : str
+        Path to postprocess directory
+    ppname : str
+        Name of postrocess file
+    
+    Returns
+    -------
+    ds : xarray.Dataset
+        Static grid file dataset
+        
+    """
+    ds = get_pathstatic(pp,ppname)
+    return xr.open_dataset(ds)
 
 def issue_dmget(path):
     """
