@@ -128,34 +128,49 @@ def issue_dmget(path):
     out = os.system(cmd)
     return out
 
+def query_dmget(user='$USER', out=False):
+    """
+    Check `dmwho` output for username. Returns 1 when user still in the queue and 0 if queue is `clean`.
+    Option `out` prints output of command if not empty
+    """
+    cmd = 'dmwho | grep %s' %user
+    output = os.popen(cmd).read()
+    if len(output) == 0:
+        return 0
+    else:
+        if out:
+            print(output)
+        return 1
+
 def get_ppnames(pp):
     """
     Return the list of folders in the pp directory
     """
-    return os.listdir(pp)
+    return os.listdir(pp+'/')
 
 def get_local(pp,ppname,out):
     """
     Retrieve an unknown local file path in pp subdirectory.
     """
-    local1 = os.listdir(pp+ppname+'/'+out+'/')[0]
-    local2 = os.listdir(pp+ppname+'/'+out+'/'+local1)[0]
-    return local1+'/'+local2
+    local1 = os.listdir('/'.join([pp,ppname,out]))[0]
+    local2 = os.listdir('/'.join([pp,ppname,out,local1]))[0]
+    return '/'.join([local1,local2])
 
-def get_varnames(pp,ppname):
+def get_varnames(pp,ppname,verbose=False):
     """
     Return a list of variables in a specific pp subdirectory.
     """
     try:
         valid = True
-        local1 = os.listdir(pp+ppname+'/ts/')[0]
+        local1 = os.listdir('/'.join([pp,ppname,'ts']))[0]
     except:
         valid = False
-        print("No ts directory in current pp/ppname file. Can't retrieve variables.")
+        if verbose:
+            print("No ts directory in "+ppname+". Can't retrieve variables.")
 
     if valid:
         local = get_local(pp,ppname,'ts')
-        files = os.listdir(pp+ppname+'/ts/'+local)
+        files = os.listdir('/'.join([pp,ppname,'ts',local]))
 
         allvars = []
         for file in files:
@@ -170,30 +185,36 @@ def get_varnames(pp,ppname):
                 continue
         return allvars
 
-def get_allvars(pp):
+def get_allvars(pp,verbose=False):
     """
     Return a dictionary of all ppnames and their associated variables.
     """
     ppnames = get_ppnames(pp)
     allvars = {}
     for ppname in ppnames:
-        varnames = get_varnames(pp,ppname)
+        varnames = get_varnames(pp,ppname,verbose=verbose)
         if varnames is not None:
             allvars[ppname]=varnames
     return allvars
 
-def find_variable(pp,variable):
+def find_variable(pp,variable,verbose=False):
     """
     Find the location of a specific variable in the pp folders.
     """
-    allvars = get_allvars(pp)
+    allvars = get_allvars(pp,verbose=verbose)
+    ppnames = []
     found=False
     for ppname in allvars.keys():
         varnames = allvars[ppname]
         if variable in varnames:
             found=True
-            print(variable+' is in '+ppname)
+            if verbose:
+                print(variable+' is in '+ppname)
+            ppnames.append(ppname)
         else:
             continue
-    if found==False:
+                    
+    if found:
+        return ppnames
+    else:
         print('No '+variable+' in this pp.')
