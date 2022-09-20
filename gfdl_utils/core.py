@@ -127,3 +127,73 @@ def issue_dmget(path):
     cmd = ("dmget %s &" %path)
     out = os.system(cmd)
     return out
+
+def get_ppnames(pp):
+    """
+    Return the list of folders in the pp directory
+    """
+    return os.listdir(pp)
+
+def get_local(pp,ppname,out):
+    """
+    Retrieve an unknown local file path in pp subdirectory.
+    """
+    local1 = os.listdir(pp+ppname+'/'+out+'/')[0]
+    local2 = os.listdir(pp+ppname+'/'+out+'/'+local1)[0]
+    return local1+'/'+local2
+
+def get_varnames(pp,ppname):
+    """
+    Return a list of variables in a specific pp subdirectory.
+    """
+    try:
+        valid = True
+        local1 = os.listdir(pp+ppname+'/ts/')[0]
+    except:
+        valid = False
+        print("No ts directory in current pp/ppname file. Can't retrieve variables.")
+
+    if valid:
+        local = get_local(pp,ppname,'ts')
+        files = os.listdir(pp+ppname+'/ts/'+local)
+
+        allvars = []
+        for file in files:
+            split = file.split('.')
+            if 'nc' not in split:
+                continue
+            else:
+                varname = split[-2]
+            if varname not in allvars:
+                allvars.append(varname)
+            else:
+                continue
+        return allvars
+
+def get_allvars(pp):
+    """
+    Return a dictionary of all ppnames and their associated variables.
+    """
+    ppnames = get_ppnames(pp)
+    allvars = {}
+    for ppname in ppnames:
+        varnames = get_varnames(pp,ppname)
+        if varnames is not None:
+            allvars[ppname]=varnames
+    return allvars
+
+def find_variable(pp,variable):
+    """
+    Find the location of a specific variable in the pp folders.
+    """
+    allvars = get_allvars(pp)
+    found=False
+    for ppname in allvars.keys():
+        varnames = allvars[ppname]
+        if variable in varnames:
+            found=True
+            print(variable+' is in '+ppname)
+        else:
+            continue
+    if found==False:
+        print('No '+variable+' in this pp.')
