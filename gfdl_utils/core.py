@@ -156,6 +156,12 @@ def get_local(pp,ppname,out):
     local2 = os.listdir('/'.join([pp,ppname,out,local1]))[0]
     return '/'.join([local1,local2])
 
+def get_timefrequency(pp,ppname):
+    """
+    Determine the time frequency of the pp subdirectory based on the local file structure.
+    """
+    return get_local(pp,ppname,'ts').split('/')[0]
+
 def get_varnames(pp,ppname,verbose=False):
     """
     Return a list of variables in a specific pp subdirectory.
@@ -218,3 +224,14 @@ def find_variable(pp,variable,verbose=False):
         return ppnames
     else:
         print('No '+variable+' in this pp.')
+        
+def query_is1x1deg(ppname):
+    """
+    Determine if variables are interpolated onto a 1x1 grid based on the ppname.
+    The is predicated on the assumption that the ppname for interpolated data ends
+    with '_1x1deg', which is common in current naming conventions.
+    """
+    if ppname.split('_')[-1]=='1x1deg':
+        return True
+    else:
+        return False
