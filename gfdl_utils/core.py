@@ -124,7 +124,10 @@ def issue_dmget(path):
     """
     Issue a dmget command to the system for the specified path
     """
-    cmd = ("dmget %s &" %path)
+    if type(path)==list:
+        cmd = ("dmget %s &" %' '.join(path))
+    elif type(path)==str:
+        cmd = ("dmget %s &" %path)
     out = os.system(cmd)
     return out
 
@@ -141,6 +144,21 @@ def query_dmget(user='$USER', out=False):
         if out:
             print(output)
         return 1
+    
+def query_ondisk(path):
+    """
+    Determine whether the files associated with [path] have been migrated from tape onto disk.
+    Returns a dictionary with keys-value pairs for the path and a boolean: True for disk, False for not.
+    """
+    cmd = ("dmls -l %s" %path)
+    outputs = os.popen(cmd).read().split('\n')
+    ondisk = {}
+    for output in outputs[:-1]:
+        if ('(REG)' in output) or ('(DUL)' in output):
+            ondisk[output.split(' ')[-1]]=True
+        else:
+            ondisk[output.split(' ')[-1]]=False
+    return ondisk
 
 def get_ppnames(pp):
     """
