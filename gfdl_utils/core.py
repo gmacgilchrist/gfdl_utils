@@ -2,7 +2,7 @@ import xarray as xr
 import glob
 import os
 
-def open_frompp(pp,ppname,out,local,time,add):
+def open_frompp(pp,ppname,out,local,time,add,**kwargs):
     """
     
     Open to a dataset from archive based on details of
@@ -33,10 +33,12 @@ def open_frompp(pp,ppname,out,local,time,add):
         Dataset corresponding to data available at path
         
     """
-    
-    path = get_pathspp(pp,ppname,out,local,time,add)
-    paths = glob.glob(path)
-    return xr.open_mfdataset(paths,use_cftime=True)
+    if isinstance(add, str):
+        path = get_pathspp(pp,ppname,out,local,time,add)
+        paths = glob.glob(path)
+    elif isinstance(add, list):
+        paths = [path for v in add for path in glob.glob(get_pathspp(pp,ppname,out,local,time,v))]
+    return xr.open_mfdataset(paths, use_cftime=True, **kwargs)
 
 def get_pathspp(pp,ppname,out,local,time,add):
     """
