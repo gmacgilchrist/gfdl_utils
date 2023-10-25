@@ -1,8 +1,9 @@
 import xarray as xr
 import glob
 import os
+import time as time_module
 
-def open_frompp(pp,ppname,out,local,time,add,**kwargs):
+def open_frompp(pp,ppname,out,local,time,add,dmget=False,**kwargs):
     """
     
     Open to a dataset from archive based on details of
@@ -37,7 +38,15 @@ def open_frompp(pp,ppname,out,local,time,add,**kwargs):
         path = get_pathspp(pp,ppname,out,local,time,add)
         paths = glob.glob(path)
     elif isinstance(add, list):
-        paths = [path for v in add for path in glob.glob(get_pathspp(pp,ppname,out,local,time,v))]
+        paths = []
+        for v in add:
+            for path in glob.glob(get_pathspp(pp,ppname,out,local,time,v)):
+                paths = paths + path
+    if dmget:
+        issue_dmget(paths)
+        while not(query_all_ondisk(paths)):
+            print("Querying")
+            time_module.sleep(5.)
     return xr.open_mfdataset(paths, use_cftime=True, **kwargs)
 
 def get_pathspp(pp,ppname,out,local,time,add):
@@ -161,6 +170,9 @@ def query_ondisk(path):
         else:
             ondisk[output.split(' ')[-1]]=False
     return ondisk
+
+def query_all_ondisk(paths):
+    return all([all(query_ondisk(path).values()) for path in paths])
 
 def get_ppnames(pp):
     """
