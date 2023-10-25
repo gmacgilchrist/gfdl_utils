@@ -45,7 +45,7 @@ def open_frompp(pp,ppname,out,local,time,add,dmget=False,**kwargs):
         print("Issuing dmget command to migrate data to disk.", end=" ")
         issue_dmget(paths)
         while not(query_all_ondisk(paths)):
-            time_module.sleep(5.)
+            time_module.sleep(1.)
         print("Migration complete.")
     return xr.open_mfdataset(paths, use_cftime=True, **kwargs)
 
