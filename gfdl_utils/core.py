@@ -40,8 +40,7 @@ def open_frompp(pp,ppname,out,local,time,add,dmget=False,**kwargs):
     elif isinstance(add, list):
         paths = []
         for v in add:
-            for path in glob.glob(get_pathspp(pp,ppname,out,local,time,v)):
-                paths = paths + path
+            paths += glob.glob(get_pathspp(pp,ppname,out,local,time,v))
     if dmget:
         issue_dmget(paths)
         while not(query_all_ondisk(paths)):
