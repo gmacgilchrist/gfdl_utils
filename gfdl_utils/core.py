@@ -42,10 +42,11 @@ def open_frompp(pp,ppname,out,local,time,add,dmget=False,**kwargs):
         for v in add:
             paths += glob.glob(get_pathspp(pp,ppname,out,local,time,v))
     if dmget:
+        print("Issuing dmget command to migrate data to disk.", end=" ")
         issue_dmget(paths)
         while not(query_all_ondisk(paths)):
-            print("Querying")
             time_module.sleep(5.)
+        print("Migration complete.")
     return xr.open_mfdataset(paths, use_cftime=True, **kwargs)
 
 def get_pathspp(pp,ppname,out,local,time,add):
